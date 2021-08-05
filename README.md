@@ -14,7 +14,7 @@ yarn add cypress-img-snapshot
 
 then add the following in your project's `<rootDir>/cypress/plugins/index.js`:
 
-```js
+```ts
 import { addMatchImageSnapshotPlugin } from 'cypress-img-snapshot/dist/plugin'
 
 module.exports = (on, config) => {
@@ -24,7 +24,7 @@ module.exports = (on, config) => {
 
 and in `<rootDir>/cypress/support/commands.js` add:
 
-```js
+```ts
 import { addMatchImageSnapshotCommand } from 'cypress-img-snapshot/dist/command'
 
 addMatchImageSnapshotCommand()
@@ -44,22 +44,20 @@ For best results you should only take screenshot in headless mode. Otherwise, yo
 
 Edit `support/commands.ts` file and add following to disable screenshots for `cypress open`.
 
-```
-
-Cypress.Commands.overwrite('screenshot', (originalFn, subject, name, options) => {
+```ts
+Cypress.Commands.overwrite('matchImageSnapshot', (originalFn, subject, name, options) => {
   if (Cypress.browser.isHeadless) {
     return originalFn(subject, name, options)
   }
   return cy.log('No screenshot taken when headed')
 })
-
 ```
 
 ### Increase Browser Size for Headless Browsers
 
 Edit `plugins/index.ts` file and add following to start headless browsers with increased resolution.
 
-```
+```ts
 module.exports = (on: PluginEvents, config: PluginConfigOptions) => {
   on('before:browser:launch', (browser, launchOptions) => {
     console.log('launching browser "%s" is headless? %s', browser.name, browser.isHeadless)
@@ -103,7 +101,7 @@ When an image diff fails, a composite image is constructed.
 
 ## Syntax
 
-```js
+```ts
 // addMatchImageSnapshotPlugin
 addMatchImageSnapshotPlugin(on, config)
 
@@ -122,7 +120,7 @@ cy.matchImageSnapshot(name, options)
 
 ### In your tests
 
-```js
+```ts
 describe('Login', () => {
   it('should be publicly accessible', () => {
     cy.visit('/login');
@@ -153,7 +151,7 @@ Additionally, any options for [`cy.screenshot()`](https://docs.cypress.io/api/co
 
 For example, the default options we use in `<rootDir>/cypress/support/commands.js` are:
 
-```js
+```ts
 addMatchImageSnapshotCommand({
   snapshotSizes: [[375, 667], [1280, 800]], // sizes of screenshots
   clockDate: new Date(Date.UTC(2019, 1, 1)), // setting cy.clock()
@@ -195,4 +193,17 @@ To support typing of `cy.matchImageSnapshot()` add the type to the `tsconfig.jso
   }
 }
 
+```
+
+## Troubleshooting
+
+### ResizeObserver loop limit exceeded
+
+you can safely ignore it in Cypress with the following code in `support/index.ts` or `commands.ts`.
+
+```ts
+Cypress.on('uncaught:exception', (err) => {
+    // returning false here prevents Cypress from failing the test
+    return !err.message.includes('ResizeObserver')
+})
 ```
